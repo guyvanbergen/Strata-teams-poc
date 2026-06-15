@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Realistic Teams Strata Committee POC</title>
+  <style>
+    :root {
+      --color-primary: #5b5fc7;
+      --color-primary-content: #ffffff;
+      --color-secondary: #e8ebfa;
+      --color-secondary-content: #242424;
+      --color-accent: #0078d4;
+      --color-accent-content: #ffffff;
+      --color-neutral: #f5f5f5;
+      --color-neutral-content: #242424;
+      --color-base-100: #ffffff;
+      --color-base-200: #f7f7f7;
+      --color-base-300: #eeeeee;
+      --color-base-content: #242424;
+      --color-info: #eaf4ff;
+      --color-info-content: #004578;
+      --color-success: #e6f4ea;
+      --color-success-content: #107c10;
+      --color-warning: #fff4ce;
+      --color-warning-content: #8a6d00;
+      --color-error: #fde7e9;
+      --color-error-content: #a4262c;
+      --color-border: #d1d1d1;
+      --color-input: #ffffff;
+      --color-muted: #616161;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--color-base-100);
+      color: var(--color-base-content);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 64px 292px minmax(0, 1fr);
+      grid-template-rows: 48px minmax(0, 1fr);
+    }
+
+    .topbar {
+      grid-column: 1 / -1;
+      background: var(--color-primary);
+      color: var(--color-primary-content);
+      display: grid;
+      grid-template-columns: 210px minmax(220px, 680px) 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 0 14px;
+    }
+    .waffle { font-size: 18px; opacity: .95; }
+    .brand { font-weight: 700; }
+    .search {
+      height: 32px;
+      border: 0;
+      border-radius: 4px;
+      padding: 0 14px;
+      background: rgba(255,255,255,.92);
+      color: #242424;
+      font-size: 13px;
+      width: 100%;
+    }
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--color-base-100);
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+
+    .rail {
+      background: var(--color-base-200);
+      border-right: 1px solid var(--color-border);
+      padding: 8px 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: stretch;
+    }
+    .rail-btn {
+      min-height: 50px;
+      border: 0;
+      background: transparent;
+      color: var(--color-muted);
+      border-radius: 6px;
+      border-left: 3px solid transparent;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      line-height: 1.1;
+      padding: 5px 0;
+    }
+    .rail-btn span { font-size: 19px; display: block; margin-bottom: 2px; }
+    .rail-btn.active {
+      background: var(--color-base-100);
+      color: var(--color-primary);
+      border-left-color: var(--color-primary);
+    }
+
+    .teams-list {
+      background: var(--color-base-200);
+      border-right: 1px solid var(--color-border);
+      overflow: auto;
+    }
+    .pane-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 16px 10px;
+    }
+    .pane-title h1 { margin: 0; font-size: 18px; font-weight: 700; }
+    .small-muted { color: var(--color-muted); font-size: 12px; }
+    .team-block { padding: 4px 8px 14px; }
+    .team-name {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .team-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      background: var(--color-primary);
+      color: var(--color-primary-content);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+    }
+    .channel-btn {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--color-base-content);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px 7px 28px;
+      text-align: left;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .channel-btn:hover { background: var(--color-base-300); }
+    .channel-btn.active { background: var(--color-base-300); font-weight: 700; }
+    .hash { color: var(--color-muted); }
+    .unread-dot {
+      margin-left: auto;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--color-primary);
+    }
+
+    .content {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      background: var(--color-base-100);
+    }
+    .channel-header {
+      padding: 14px 22px 8px;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .channel-title { display: flex; align-items: center; gap: 8px; }
+    .channel-title h2 { margin: 0; font-size: 19px; font-weight: 700; }
+    .header-actions { display: flex; gap: 8px; }
+    .icon-button {
+      height: 30px;
+      border: 1px solid var(--color-border);
+      background: var(--color-base-100);
+      color: var(--color-base-content);
+      border-radius: 4px;
+      padding: 0 10px;
+      font-size: 12px;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: end;
+      gap: 2px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--color-border);
+      overflow-x: auto;
+      background: var(--color-base-100);
+    }
+    .tab-btn {
+      border: 0;
+      background: transparent;
+      color: var(--color-muted);
+      border-bottom: 3px solid transparent;
+      padding: 12px 10px 9px;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+    .tab-btn.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+      font-weight: 700;
+    }
+    .plus { font-size: 18px; padding-inline: 12px; }
+
+    .workspace {
+      min-height: 0;
+      overflow: auto;
+      background: var(--color-base-200);
+      padding: 16px 20px 26px;
+    }
+
+    .teams-card {
+      background: var(--color-base-100);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,.03);
+    }
+    .card-head {
+      min-height: 52px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-head h3 { margin: 0; font-size: 15px; font-weight: 700; }
+    .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .primary-btn {
+      border: 0;
+      background: var(--color-primary);
+      color: var(--color-primary-content);
+      border-radius: 4px;
+      padding: 7px 11px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .secondary-btn {
+      border: 1px solid var(--color-border);
+      background: var(--color-base-100);
+      color: var(--color-base-content);
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .posts-layout {
+      max-width: 850px;
+      margin: 0 auto;
+    }
+    .compose {
+      background: var(--color-base-100);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    .compose-input {
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      padding: 10px;
+      color: var(--color-muted);
+      background: var(--color-base-100);
+    }
+    .post {
+      background: var(--color-base-100);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 11px;
+    }
+    .post-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--color-base-300);
+      color: var(--color-primary);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .post-meta { display: flex; gap: 8px; align-items: baseline; margin-bottom: 5px; }
+    .post-name { font-weight: 700; font-size: 13px; }
+    .post-time { color: var(--color-muted); font-size: 12px; }
+    .post-body { font-size: 13px; line-height: 1.45; }
+    .reply { margin-top: 10px; color: var(--color-primary); font-size: 12px; font-weight: 600; }
+
+    .planner-shell { background: var(--color-base-100); }
+    .planner-subnav {
+      padding: 10px 14px 0;
+      display: flex;
+      gap: 16px;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-base-100);
+    }
+    .planner-view-btn {
+      border: 0;
+      background: transparent;
+      color: var(--color-muted);
+      padding: 0 0 10px;
+      border-bottom: 2px solid transparent;
+      font-size: 13px;
+    }
+    .planner-view-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 700; }
+    .planner-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 12px;
+      padding: 14px;
+      min-width: 980px;
+    }
+    .bucket {
+      background: var(--color-base-200);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 450px;
+    }
+    .bucket-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 10px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .task-card {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--color-border);
+      background: var(--color-base-100);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+    .task-card:hover { border-color: var(--color-primary); }
+    .task-title { font-weight: 650; font-size: 13px; line-height: 1.35; margin-bottom: 9px; }
+    .labels { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+    .label { height: 7px; width: 42px; border-radius: 5px; background: var(--color-primary); }
+    .label.green { background: var(--color-success-content); }
+    .label.yellow { background: #c19c00; }
+    .label.red { background: var(--color-error-content); }
+    .task-meta { display: flex; align-items: center; gap: 7px; color: var(--color-muted); font-size: 11px; flex-wrap: wrap; }
+    .initials {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      background: var(--color-base-300);
+      color: var(--color-primary);
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .due-red { color: var(--color-error-content); }
+    .due-warn { color: var(--color-warning-content); }
+    .add-task {
+      width: 100%;
+      border: 1px dashed var(--color-border);
+      background: transparent;
+      border-radius: 6px;
+      padding: 9px;
+      color: var(--color-muted);
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .grid-table { width: 100%; border-collapse: collapse; background: var(--color-base-100); }
+    .grid-table th, .grid-table td {
+      border-bottom: 1px solid var(--color-border);
+      border-right: 1px solid var(--color-border);
+      padding: 9px 10px;
+      text-align: left;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+    .grid-table th { background: var(--color-base-200); color: var(--color-muted); font-weight: 650; }
+    .grid-table th:last-child, .grid-table td:last-child { border-right: 0; }
+    .status-pill {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 12px;
+      background: var(--color-base-300);
+      color: var(--color-base-content);
+      white-space: nowrap;
+    }
+    .status-pill.approved { background: var(--color-success); color: var(--color-success-content); }
+    .status-pill.pending { background: var(--color-warning); color: var(--color-warning-content); }
+    .status-pill.declined { background: var(--color-error); color: var(--color-error-content); }
+
+    .files-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .file-list { background: var(--color-base-100); border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; }
+    .file-row {
+      display: grid;
+      grid-template-columns: 1fr 150px 140px 100px;
+      gap: 12px;
+      align-items: center;
+      min-height: 46px;
+      padding: 0 12px;
+      border-top: 1px solid var(--color-border);
+      font-size: 13px;
+    }
+    .file-row:first-child { border-top: 0; background: var(--color-base-200); color: var(--color-muted); font-weight: 650; }
+    .file-name { display: flex; align-items: center; gap: 9px; font-weight: 600; }
+    .file-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
+      display: grid;
+      place-items: center;
+      background: var(--color-info);
+      color: var(--color-info-content);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .form-embed {
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--color-base-100);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .forms-purple { height: 8px; background: var(--color-primary); }
+    .form-body { padding: 22px; }
+    .form-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .form-desc { color: var(--color-muted); margin-bottom: 20px; line-height: 1.45; }
+    .question { border-top: 1px solid var(--color-border); padding: 16px 0; }
+    .question h4 { margin: 0 0 10px; font-size: 15px; }
+    .option { display: flex; align-items: center; gap: 8px; margin: 9px 0; }
+    .option input { accent-color: var(--color-primary); }
+    .form-status {
+      margin-top: 12px;
+      padding: 10px;
+      background: var(--color-success);
+      color: var(--color-success-content);
+      border-radius: 6px;
+      display: none;
+      font-size: 13px;
+    }
+    .form-status.show { display: block; }
+
+    .task-panel {
+      position: fixed;
+      right: 0;
+      top: 48px;
+      bottom: 0;
+      width: 380px;
+      background: var(--color-base-100);
+      border-left: 1px solid var(--color-border);
+      box-shadow: -4px 0 14px rgba(0,0,0,.12);
+      display: none;
+      grid-template-rows: auto 1fr;
+      z-index: 5;
+    }
+    .task-panel.open { display: grid; }
+    .panel-top {
+      padding: 14px;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .panel-body { padding: 16px; overflow: auto; }
+    .panel-body h3 { margin: 0 0 12px; font-size: 17px; }
+    .field { display: grid; grid-template-columns: 100px 1fr; gap: 10px; border-top: 1px solid var(--color-border); padding: 10px 0; font-size: 13px; }
+    .field span:first-child { color: var(--color-muted); }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 58px 250px minmax(0, 1fr); }
+      .topbar { grid-template-columns: 160px minmax(180px, 1fr) auto; }
+      .brand { display: none; }
+      .file-row { grid-template-columns: 1fr 120px 100px; }
+      .file-row > :nth-child(3) { display: none; }
+    }
+    @media (max-width: 760px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: 48px minmax(0, 1fr); }
+      .rail, .teams-list { display: none; }
+      .topbar { grid-column: 1; grid-template-columns: 1fr auto; }
+      .search { display: none; }
+      .task-panel { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div><span class="waffle">☰</span> <span class="brand">Microsoft Teams</span></div>
+      <input class="search" aria-label="Search" value="Search" readonly>
+      <div></div>
+      <div class="profile"><span>Guy Van Bergen</span><span class="avatar">GV</span></div>
+    </header>
+
+    <nav class="rail" aria-label="Teams app navigation">
+      <button class="rail-btn" type="button"><span>🔔</span>Activity</button>
+      <button class="rail-btn" type="button"><span>💬</span>Chat</button>
+      <button class="rail-btn active" type="button"><span>👥</span>Teams</button>
+      <button class="rail-btn" type="button"><span>📅</span>Calendar</button>
+      <button class="rail-btn" type="button"><span>☑</span>Planner</button>
+      <button class="rail-btn" type="button"><span>…</span>More</button>
+    </nav>
+
+    <aside class="teams-list">
+      <div class="pane-title"><h1>Teams</h1><span class="small-muted">⋯</span></div>
+      <div class="team-block">
+        <div class="team-name"><span class="team-icon">SC</span><span>Strata Committee</span></div>
+        <button class="channel-btn active" type="button" data-channel="General"><span class="hash">#</span> General <span class="unread-dot"></span></button>
+        <button class="channel-btn" type="button" data-channel="Repairs & Maintenance"><span class="hash">#</span> Repairs & Maintenance <span class="unread-dot"></span></button>
+        <button class="channel-btn" type="button" data-channel="Quotes & Contractors"><span class="hash">#</span> Quotes & Contractors</button>
+        <button class="channel-btn" type="button" data-channel="Finance & Levies"><span class="hash">#</span> Finance & Levies</button>
+        <button class="channel-btn" type="button" data-channel="By-laws & Compliance"><span class="hash">#</span> By-laws & Compliance</button>
+        <button class="channel-btn" type="button" data-channel="AGM / Meetings"><span class="hash">#</span> AGM / Meetings</button>
+      </div>
+      <div class="team-block">
+        <div class="team-name"><span class="team-icon">OC</span><span>Owners Corp Reference</span></div>
+        <button class="channel-btn" type="button" data-channel="Documents"><span class="hash">#</span> Documents</button>
+        <button class="channel-btn" type="button" data-channel="Insurance"><span class="hash">#</span> Insurance</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="channel-header">
+        <div class="channel-title"><span class="hash">#</span><h2 id="channelTitle">General</h2></div>
+        <div class="header-actions"><button class="icon-button" type="button">Meet ▾</button><button class="icon-button" type="button">⋯</button></div>
+      </section>
+
+      <nav class="tabs" aria-label="Channel tabs">
+        <button class="tab-btn" type="button" data-tab="posts">Posts</button>
+        <button class="tab-btn" type="button" data-tab="files">Files</button>
+        <button class="tab-btn active" type="button" data-tab="planner">Action Register</button>
+        <button class="tab-btn" type="button" data-tab="decisions">Decision Register</button>
+        <button class="tab-btn" type="button" data-tab="form">Gutter Repair Vote</button>
+        <button class="tab-btn plus" type="button" data-tab="add">+</button>
+      </nav>
+
+      <section class="workspace" id="workspace"></section>
+    </main>
+  </div>
+
+  <aside class="task-panel" id="taskPanel" aria-label="Planner task details">
+    <div class="panel-top"><strong>Task details</strong><button class="secondary-btn" type="button" id="closePanel">Close</button></div>
+    <div class="panel-body" id="panelBody"></div>
+  </aside>
+
+  <script>
+    const state = { channel: 'General', tab: 'planner', formSubmitted: false };
+
+    const tasks = [
+      { channel: 'General', title: 'Prepare next committee meeting agenda', bucket: 'Not started', assigned: 'GV', due: '26 Jun', priority: 'Medium', labels: ['yellow'], checklist: '2/5', description: 'Collect motions, attach supporting papers and circulate the draft agenda.' },
+      { channel: 'General', title: 'Draft resident notice for visitor parking reminders', bucket: 'In progress', assigned: 'PB', due: '21 Jun', priority: 'Medium', labels: ['green'], checklist: '1/3', description: 'Draft notice, committee review, then issue via strata manager.' },
+      { channel: 'General', title: 'Approve $4,850 gutter repair quote', bucket: 'Waiting for decision', assigned: 'SC', due: '20 Jun', priority: 'Urgent', labels: ['red'], checklist: '3/4', description: 'Quote received from Northside Roofing. Committee vote is being collected in the Forms tab.' },
+      { channel: 'General', title: 'Record insurance valuation follow-up in minutes', bucket: 'Completed', assigned: 'SM', due: '18 Jun', priority: 'Low', labels: ['green'], checklist: '2/2', description: 'Outcome recorded and supporting email saved in Files.' },
+      { channel: 'Repairs & Maintenance', title: 'Review water ingress report for Unit 14 balcony', bucket: 'Not started', assigned: 'MB', due: '19 Jun', priority: 'Urgent', labels: ['red'], checklist: '1/4', description: 'Photos and contractor report are in Files. Decide whether urgent works approval is needed.' },
+      { channel: 'Repairs & Maintenance', title: 'Schedule annual fire safety inspection', bucket: 'In progress', assigned: 'SM', due: '25 Jun', priority: 'Medium', labels: ['yellow'], checklist: '2/4', description: 'Confirm contractor availability, then notify residents.' },
+      { channel: 'Quotes & Contractors', title: 'Obtain third quote for foyer lighting upgrade', bucket: 'In progress', assigned: 'GV', due: '24 Jun', priority: 'Medium', labels: ['yellow'], checklist: '2/3', description: 'Two quotes received. Third quote requested from BrightWay Electrical.' },
+      { channel: 'Quotes & Contractors', title: 'Compare cleaning tender responses', bucket: 'Not started', assigned: 'PB', due: '27 Jun', priority: 'Medium', labels: ['green'], checklist: '0/3', description: 'Prepare comparison in the Decision Register list.' },
+      { channel: 'Finance & Levies', title: 'Check maintenance spend against YTD budget', bucket: 'In progress', assigned: 'GV', due: '28 Jun', priority: 'Medium', labels: ['yellow'], checklist: '1/2', description: 'Use strata manager report to produce variance notes.' },
+      { channel: 'By-laws & Compliance', title: 'Update pet application workflow', bucket: 'Not started', assigned: 'MB', due: '30 Jun', priority: 'Low', labels: ['green'], checklist: '0/3', description: 'Build a standard Forms intake for pet applications.' },
+      { channel: 'AGM / Meetings', title: 'Create action register from previous minutes', bucket: 'In progress', assigned: 'SC', due: '23 Jun', priority: 'High', labels: ['yellow'], checklist: '4/8', description: 'Convert minutes into Planner tasks with owners and due dates.' }
+    ];
+
+    const decisions = [
+      ['D-024', 'Gutter repair quote', '$4,850', 'Committee vote in progress', 'Pending', '20 Jun'],
+      ['D-023', 'Visitor parking reminder notice', 'N/A', 'Wording approved for issue', 'Approved', '17 Jun'],
+      ['D-022', 'Foyer lighting upgrade', 'TBC', 'Waiting for third quote', 'Pending', '24 Jun'],
+      ['D-021', 'Insurance valuation follow-up', 'N/A', 'Strata manager to provide update next week', 'Approved', '18 Jun'],
+      ['D-020', 'Cleaning tender scope', 'TBC', 'Scope to be revised before tender', 'Pending', '27 Jun']
+    ];
+
+    const files = [
+      ['Northside Roofing quote - gutter repair.pdf', 'Guy Van Bergen', 'Today', 'PDF'],
+      ['Committee action register export.xlsx', 'Guy Van Bergen', 'Yesterday', 'XLS'],
+      ['Draft visitor parking notice.docx', 'Priya B.', '2 days ago', 'DOC'],
+      ['Insurance valuation request.eml', 'Sam M.', '3 days ago', 'MSG'],
+      ['Foyer lighting quote comparison.xlsx', 'Guy Van Bergen', '4 days ago', 'XLS'],
+      ['Unit 14 water ingress photos.zip', 'Maria B.', '5 days ago', 'ZIP']
+    ];
+
+    function channelTasks() {
+      let list = tasks.filter(t => t.channel === state.channel);
+      if (!list.length && (state.channel === 'Documents' || state.channel === 'Insurance')) list = tasks.slice(0, 4);
+      return list;
+    }
+
+    function render() {
+      document.getElementById('channelTitle').textContent = state.channel;
+      document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.channel === state.channel));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === state.tab));
+      const ws = document.getElementById('workspace');
+      if (state.tab === 'posts') ws.innerHTML = renderPosts();
+      if (state.tab === 'files') ws.innerHTML = renderFiles();
+      if (state.tab === 'planner') ws.innerHTML = renderPlanner();
+      if (state.tab === 'decisions') ws.innerHTML = renderDecisions();
+      if (state.tab === 'form') ws.innerHTML = renderForm();
+      if (state.tab === 'add') ws.innerHTML = renderAddTab();
+    }
+
+    function renderPosts() {
+      return `<div class="posts-layout">
+        <div class="compose"><div class="compose-input">Start a new post. Type @ to mention someone.</div></div>
+        ${post('GV','Guy Van Bergen','Today 9:31 AM','I have added the Action Register tab to this channel. Please use Planner cards for allocated work rather than burying actions in the post thread.')}
+        ${post('MB','Maria B.','Yesterday 4:18 PM','The water ingress photos and quote are now in Files. I have linked the item to the gutter repair vote.')}
+        ${post('SM','Sam M.','Monday 11:02 AM','Strata manager confirmed the insurance valuation update should arrive next week.')}
+      </div>`;
+    }
+
+    function post(initials, name, time, body) {
+      return `<article class="post"><div class="post-avatar">${initials}</div><div><div class="post-meta"><span class="post-name">${name}</span><span class="post-time">${time}</span></div><div class="post-body">${body}</div><div class="reply">Reply</div></div></article>`;
+    }
+
+    function renderPlanner() {
+      const buckets = ['Not started', 'In progress', 'Waiting for decision', 'Completed'];
+      const list = channelTasks();
+      return `<section class="teams-card planner-shell">
+        <div class="card-head">
+          <h3>Action Register</h3>
+          <div class="toolbar"><button class="primary-btn" type="button" id="newTaskBtn">+ New task</button><button class="secondary-btn" type="button">Filter</button><button class="secondary-btn" type="button">Group by bucket</button></div>
+        </div>
+        <div class="planner-subnav"><button class="planner-view-btn active" type="button">Board</button><button class="planner-view-btn" type="button">Grid</button><button class="planner-view-btn" type="button">Charts</button><button class="planner-view-btn" type="button">Schedule</button></div>
+        <div class="planner-board">
+          ${buckets.map(bucket => `<div class="bucket"><div class="bucket-title">${bucket}<span>${list.filter(t => t.bucket === bucket).length}</span></div>${list.filter(t => t.bucket === bucket).map(taskCard).join('')}<button class="add-task" type="button">+ Add task</button></div>`).join('')}
+        </div>
+      </section>`;
+    }
+
+    function taskCard(t) {
+      const dueClass = t.priority === 'Urgent' ? 'due-red' : t.priority === 'High' ? 'due-warn' : '';
+      return `<button class="task-card" type="button" data-task="${encodeURIComponent(t.title)}">
+        <div class="labels">${t.labels.map(c => `<span class="label ${c}"></span>`).join('')}</div>
+        <div class="task-title">${t.title}</div>
+        <div class="task-meta"><span class="initials">${t.assigned}</span><span class="${dueClass}">Due ${t.due}</span><span>☑ ${t.checklist}</span></div>
+      </button>`;
+    }
+
+    function renderFiles() {
+      return `<div class="files-toolbar"><div class="small-muted">Files are the standard channel document library backed by SharePoint.</div><div class="toolbar"><button class="primary-btn" type="button">Upload</button><button class="secondary-btn" type="button">New ▾</button><button class="secondary-btn" type="button">Copy link</button></div></div>
+      <div class="file-list">
+        <div class="file-row"><div>Name</div><div>Modified by</div><div>Modified</div><div>Type</div></div>
+        ${files.map(f => `<div class="file-row"><div class="file-name"><span class="file-icon">${f[3]}</span>${f[0]}</div><div>${f[1]}</div><div>${f[2]}</div><div>${f[3]}</div></div>`).join('')}
+      </div>`;
+    }
+
+    function renderDecisions() {
+      return `<section class="teams-card">
+        <div class="card-head"><h3>Decision Register</h3><div class="toolbar"><button class="primary-btn" type="button">+ New item</button><button class="secondary-btn" type="button">Edit in grid view</button><button class="secondary-btn" type="button">Export</button></div></div>
+        <table class="grid-table">
+          <thead><tr><th>Decision ID</th><th>Topic</th><th>Amount</th><th>Decision / next step</th><th>Status</th><th>Target date</th></tr></thead>
+          <tbody>${decisions.map(d => `<tr><td>${d[0]}</td><td>${d[1]}</td><td>${d[2]}</td><td>${d[3]}</td><td><span class="status-pill ${d[4].toLowerCase()}">${d[4]}</span></td><td>${d[5]}</td></tr>`).join('')}</tbody>
+        </table>
+      </section>`;
+    }
+
+    function renderForm() {
+      return `<div class="form-embed"><div class="forms-purple"></div><div class="form-body">
+        <div class="form-title">Committee vote: gutter repair quote</div>
+        <div class="form-desc">This is shown as a Microsoft Forms-style tab in the channel. Responses would be stored in Forms and summarised/exported separately.</div>
+        <div class="question"><h4>Do you approve the $4,850 quote from Northside Roofing?</h4><label class="option"><input type="radio" name="vote"> Yes, approve the quote</label><label class="option"><input type="radio" name="vote"> No, do not approve</label><label class="option"><input type="radio" name="vote"> Abstain</label></div>
+        <div class="question"><h4>Comment, if required</h4><input style="width:100%;height:38px;border:1px solid var(--color-border);border-radius:4px;padding:0 10px" value="" aria-label="Comment"></div>
+        <button class="primary-btn" type="button" id="submitFormBtn">Submit</button><div class="form-status ${state.formSubmitted ? 'show' : ''}">Sample response submitted.</div>
+      </div></div>`;
+    }
+
+    function renderAddTab() {
+      return `<section class="teams-card"><div class="card-head"><h3>Add a tab</h3></div><div style="padding:18px;line-height:1.55"><p>This represents the real Teams + tab behaviour. For this strata setup, realistic tabs are:</p><ul><li>Planner / Tasks by Planner for the action register</li><li>Lists for the decision register or quote register</li><li>Forms for a specific vote, survey or resident feedback form</li><li>Files, which is standard in every channel</li><li>OneNote, Loop, Word, Excel, PDF or SharePoint page where available in your tenant</li></ul></div></section>`;
+    }
+
+    function openTask(title) {
+      const task = tasks.find(t => t.title === title);
+      if (!task) return;
+      document.getElementById('panelBody').innerHTML = `<h3>${task.title}</h3><div class="field"><span>Bucket</span><strong>${task.bucket}</strong></div><div class="field"><span>Assigned to</span><span>${task.assigned}</span></div><div class="field"><span>Due date</span><span>${task.due}</span></div><div class="field"><span>Priority</span><span>${task.priority}</span></div><div class="field"><span>Checklist</span><span>${task.checklist}</span></div><div class="field"><span>Notes</span><span>${task.description}</span></div><div style="margin-top:14px" class="small-muted">This is modelled on opening a Planner task from a Teams tab.</div>`;
+      document.getElementById('taskPanel').classList.add('open');
+    }
+
+    document.querySelectorAll('.channel-btn').forEach(btn => btn.addEventListener('click', () => {
+      state.channel = btn.dataset.channel;
+      if (state.channel === 'Documents' || state.channel === 'Insurance') state.tab = 'files';
+      render();
+    }));
+
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+      state.tab = btn.dataset.tab;
+      render();
+    }));
+
+    document.getElementById('workspace').addEventListener('click', e => {
+      const taskBtn = e.target.closest('.task-card');
+      if (taskBtn) openTask(decodeURIComponent(taskBtn.dataset.task));
+      if (e.target.id === 'submitFormBtn') { state.formSubmitted = true; render(); }
+      if (e.target.id === 'newTaskBtn') {
+        const panel = document.getElementById('taskPanel');
+        document.getElementById('panelBody').innerHTML = `<h3>New task</h3><div class="field"><span>Title</span><span>Untitled task</span></div><div class="field"><span>Bucket</span><span>Not started</span></div><div class="field"><span>Assigned to</span><span>Unassigned</span></div><div class="field"><span>Due date</span><span>Not set</span></div><div style="margin-top:14px" class="small-muted">In Teams this would open the Planner task creation flow.</div>`;
+        panel.classList.add('open');
+      }
+    });
+
+    document.getElementById('closePanel').addEventListener('click', () => document.getElementById('taskPanel').classList.remove('open'));
+    render();
+  </script>
+</body>
+</html>
